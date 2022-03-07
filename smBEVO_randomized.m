@@ -238,14 +238,13 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
     %% build image levels from ideal segments
     % start with the longest segment
     colWidths = colStops + 1 - colStarts;
-    % set number of random iterations
-    rand_iterations = 1000;
-    n_levels_dist = zeros(1, rand_iterations);
+    % set number of iterations to number of segments
+    n_levels_dist = zeros(1, numel(colWidths));
     % [blue, orange, green, yellow, purple, magenta] = [3, 4, 5, 6, 7, 8] levels
     colors = {[0 0.4470 0.7410], [0.8500 0.3250 0.0980], [0.4660 0.6740 0.1880], [0.9290 0.6940 0.1250], [0.4940 0.1840 0.5560], [0.3010 0.7450 0.9330]};
     figure; hold on;
-    for i = 1:rand_iterations
-        i0 = randi(numel(colWidths));
+    for i = 1:numel(colWidths)
+        i0 = i;
         imlevels = nan(1,ncols);
         cols = colStarts(i0):colStops(i0);
         imlevels(cols) = immaxseq(cols);
@@ -353,7 +352,7 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
     for levs_num = 1:length(classes)
         levels_matrix = [];
         spot = 1;
-        for i = 1:rand_iterations
+        for i = 1:numel(colWidths)
             if size(all_outputs(i).levels, 1) == classes(levs_num)
                 levels_matrix(:,:,spot) = all_outputs(i).levels;
                 spot = spot + 1;
