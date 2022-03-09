@@ -285,7 +285,7 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                         imlevels = [imlevels(1:ilevel-1,:); newlevel; imlevels(ilevel:end,:)];
                         d = [d(1:ilevel-1); 0; d(ilevel:end)];
                         %record jump: 1 and location of jump: 
-                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1]
+                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
                     end
                     imlevels(:,acols) = immaxseq(acols) - d;
                 end
