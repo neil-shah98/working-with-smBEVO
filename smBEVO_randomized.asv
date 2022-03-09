@@ -244,6 +244,7 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
     colors = {[0 0.4470 0.7410], [0.8500 0.3250 0.0980], [0.4660 0.6740 0.1880], [0.9290 0.6940 0.1250], [0.4940 0.1840 0.5560], [0.3010 0.7450 0.9330]};
     figure; hold on;
 
+    %all_jumps = [];
     all_jumps = [];
 
     % run the algorithm starting at each segment
@@ -270,7 +271,9 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                     d = imlevels(:,acols(end)+1) - imlevels(ilevel,acols(end)+1);
                     imlevels(:,acols) = immaxseq(acols) + d;
                     %record no jump: 0 and location of (non)jump: acols(end)+1?
-                    all_jumps = [all_jumps; 0,acols(end), acols(end) + 1];
+                    %all_jumps = [all_jumps; 0,acols(end), acols(end) + 1];
+                    addJump = [all_jumps(i) 0];
+                    all_jumps(i) = addJump;
                 else
                     % add new level
                     newlevel = imlevels(ilevel,:) + d(ilevel);
@@ -279,13 +282,17 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                         imlevels = [imlevels(1:ilevel,:); newlevel; imlevels(ilevel+1:end,:)];
                         d = [d(1:ilevel); 0; d(ilevel+1:end)];
                         %record jump: 1 and location of jump: 
-                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        %all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        addJump = [all_jumps(i) 1];
+                        all_jumps(i) = addJump;
                     else
                         % add below ilevel
                         imlevels = [imlevels(1:ilevel-1,:); newlevel; imlevels(ilevel:end,:)];
                         d = [d(1:ilevel-1); 0; d(ilevel:end)];
                         %record jump: 1 and location of jump: 
-                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1]
+                        %all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        addJump = [all_jumps(i) 1];
+                        all_jumps(i) = addJump;
                     end
                     imlevels(:,acols) = immaxseq(acols) - d;
                 end
@@ -299,7 +306,9 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                     d = imlevels(:,bcols(1)-1) - imlevels(ilevel,bcols(1)-1);
                     imlevels(:,bcols) = immaxseq(bcols) + d;
                     %record no jump: 0 and location of (non)jump: acols(end)+1?
-                    all_jumps = [all_jumps; 0, bcols(1) - 1, bcols(1)];
+                    %all_jumps = [all_jumps; 0, bcols(1) - 1, bcols(1)];
+                    addJump = [all_jumps(i) 0];
+                    all_jumps(i) = addJump;
                 else
                     % add new level
                     newlevel = imlevels(ilevel,:) + d(ilevel);
@@ -308,13 +317,17 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                         imlevels = [imlevels(1:ilevel,:); newlevel; imlevels(ilevel+1:end,:)];
                         d = [d(1:ilevel); 0; d(ilevel+1:end)];
                         % record jump = 1 and location of jump:
-                        all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        %all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        addJump = [all_jumps(i) 1];
+                        all_jumps(i) = addJump;
                     else
                         % add below ilevel
                         imlevels = [imlevels(1:ilevel-1,:); newlevel; imlevels(ilevel:end,:)];
                         d = [d(1:ilevel-1); 0; d(ilevel:end)];
                         % record jump = 1 and location of jump:
-                        all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        %all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        addJump = [all_jumps(i) 1];
+                        all_jumps(i) = addJump;
                     end
                     imlevels(:,bcols) = immaxseq(bcols) - d;
                 end

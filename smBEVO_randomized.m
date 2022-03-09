@@ -298,7 +298,7 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                     % connect to ilevel
                     d = imlevels(:,bcols(1)-1) - imlevels(ilevel,bcols(1)-1);
                     imlevels(:,bcols) = immaxseq(bcols) + d;
-                    %record no jump: 0 and location of (non)jump: acols(end)+1?
+                    %record no jump: 0 and location of (non)jump: 
                     all_jumps = [all_jumps; 0, bcols(1) - 1, bcols(1)];
                 else
                     % add new level
