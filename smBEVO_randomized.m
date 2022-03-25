@@ -35,8 +35,8 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
 
     %% running as script for now
     load('sample_data_series.mat');
-    sigmaX = 150;
-    sigmaY = 0.08;
+    sigmaX = 50;
+    sigmaY = 0.1;
     ip.Results.pixelsPerSigmaX = 4;
     ip.Results.pixelsPerSigmaY = 4;
     ip.Results.smoothing = 0;
@@ -245,6 +245,12 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
     figure; hold on;
 
     all_jumps = [];
+    n_segments = numel(colWidths);
+
+    %did_jump = zeros(n_segments, n_segments - 1);
+    did_jump = zeros(3, n_segments - 1);
+
+    immax_segment_lvl_index = zeros(n_segments, n_segments);
 
     % run the algorithm starting at each segment
     for i = 1:numel(colWidths)
@@ -255,6 +261,9 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
         % array is the y pixel that level is on
         cols = colStarts(i0):colStops(i0);
         imlevels(cols) = immaxseq(cols);
+
+        immax_segment_lvl_index(i,i) = 1;
+
         nstarts = numel(colStarts);
         niters = max(i0-1, nstarts-i0);
         minLevelSep_px = p.minLevelSep * (sy / p.sigmaY);
@@ -270,7 +279,9 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                     d = imlevels(:,acols(end)+1) - imlevels(ilevel,acols(end)+1);
                     imlevels(:,acols) = immaxseq(acols) + d;
                     %record no jump: 0 and location of (non)jump: acols(end)+1?
-                    all_jumps = [all_jumps; 0,acols(end), acols(end) + 1];
+                    %all_jumps = [all_jumps; 0,acols(end), acols(end) + 1];
+                    did_jump(i,a) = 0;
+                    immax_segment_lvl_index(i,a) = ilevel;
                 else
                     % add new level
                     newlevel = imlevels(ilevel,:) + d(ilevel);
@@ -279,13 +290,17 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                         imlevels = [imlevels(1:ilevel,:); newlevel; imlevels(ilevel+1:end,:)];
                         d = [d(1:ilevel); 0; d(ilevel+1:end)];
                         %record jump: 1 and location of jump: 
-                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        %all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        did_jump(i,a) = -1;
+                        immax_segment_lvl_index(i,a) = ilevel + 1;
                     else
                         % add below ilevel
                         imlevels = [imlevels(1:ilevel-1,:); newlevel; imlevels(ilevel:end,:)];
                         d = [d(1:ilevel-1); 0; d(ilevel:end)];
                         %record jump: 1 and location of jump: 
-                        all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        %all_jumps = [all_jumps; 1, acols(end), acols(end) + 1];
+                        did_jump(i,a) = 1;
+                        immax_segment_lvl_index(i,a) = ilevel;
                     end
                     imlevels(:,acols) = immaxseq(acols) - d;
                 end
@@ -299,7 +314,9 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                     d = imlevels(:,bcols(1)-1) - imlevels(ilevel,bcols(1)-1);
                     imlevels(:,bcols) = immaxseq(bcols) + d;
                     %record no jump: 0 and location of (non)jump: 
-                    all_jumps = [all_jumps; 0, bcols(1) - 1, bcols(1)];
+                    %all_jumps = [all_jumps; 0, bcols(1) - 1, bcols(1)];
+                    did_jump(i,b-1) = 0;
+                    immax_segment_lvl_index(i,b) = ilevel;
                 else
                     % add new level
                     newlevel = imlevels(ilevel,:) + d(ilevel);
@@ -308,13 +325,17 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                         imlevels = [imlevels(1:ilevel,:); newlevel; imlevels(ilevel+1:end,:)];
                         d = [d(1:ilevel); 0; d(ilevel+1:end)];
                         % record jump = 1 and location of jump:
-                        all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        %all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        did_jump(i,b-1) = 1;
+                        immax_segment_lvl_index(i,b) = ilevel + 1;
                     else
                         % add below ilevel
                         imlevels = [imlevels(1:ilevel-1,:); newlevel; imlevels(ilevel:end,:)];
                         d = [d(1:ilevel-1); 0; d(ilevel:end)];
                         % record jump = 1 and location of jump:
-                        all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        %all_jumps = [all_jumps; 1, bcols(1) - 1, bcols(1)];
+                        did_jump(i,b-1) = -1;
+                        immax_segment_lvl_index(i,b) = ilevel;
                     end
                     imlevels(:,bcols) = immaxseq(bcols) - d;
                 end
@@ -360,8 +381,85 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
         for lev = 1:nlevels
             plot((1:ncols), imlevels(lev, :), 'LineWidth', 1, 'Color', plot_color);
         end
+        
+        
         all_outputs(i).levels = imlevels;
+
+
     end
+    
+    
+%     jumps_by_starting_segment = zeros(n_segments, n_segments-1);
+%     starting_segments = 1:n_segments-1:n_segments*n_segments;
+% 
+%     for q = starting_segments
+%         jumps_by_starting_segment(q,:) = all_jumps(q:q + n_segments - 2, 1);
+%     end
+    
+
+    %initialize an array where each column is a jump point
+%     for q = 1:n_segments - 1
+%         jumps_by_starting_segment.jump_pos{q} = [all_jumps(q, 2:3)];        
+%     end
+%     
+%     did_jump = zeros(n_segments, n_segments - 1);
+
+    
+
+
+    %go through each jump recorded by starting segment and assign the value
+    %of each jump to the correct jump point
+    
+%     for i = 1:n_segments*(n_segments-1)
+%     
+%         for j = 1:numel(jumps_by_starting_segment.jump_pos)
+% 
+%             if sum(all_jumps(i, 2:3) == jumps_by_starting_segment.jump_pos{j}) == 2
+%                 jumps_by_starting_segment.didJump(j) = [jumps_by_starting_segment.didJump(j); all_jumps(i,1)];
+%             end
+% 
+%         end
+% 
+%     end
+
+%     figure;
+%     imagesc(result.im);
+%     colormap(gray(256));
+%     axis xy;
+%     hold on;
+%     plot(1:ncols, imlevels, 'linewidth', 2);
+
+    immax_segment_lvl_index = immax_segment_lvl_index - min(immax_segment_lvl_index, [], 2);
+    diff_immax_segment = immax_segment_lvl_index(:,2:end) - immax_segment_lvl_index(:,1:end - 1);
+
+    figure;
+    subplot(3,1,1)
+    plot(immaxseq)
+    subplot(3,1,2)
+    segment_centers = (colStarts + colStops) /2;
+    plot(colStops, diff_immax_segment);
+    subplot(3,1,3)
+    plot(colStops(1), diff_immax_segment(:,1), 'o')
+    
+
+
+
+%     jump_probability = mean(did_jump,1);
+% 
+%     y = (immaxseq-min(immaxseq))/ (max(immaxseq) - min(immaxseq));
+%     figure();
+%     
+%     plot(y)
+%     plot(colStops(1:end-1), jump_probability, 'o')
+
+    
+%%
+
+
+
+    
+
+
     title("Image Representation with 1000 Level Fits Overlaid")
     figure;
     histogram(n_levels_dist);
@@ -379,6 +477,8 @@ function result = smBEVO_randomized(data, sigmaX, sigmaY, varargin)
                 spot = spot + 1;
             end
         end
+
+        
         if classes(levs_num) == 3
             figure;
             imagesc(result.im);
